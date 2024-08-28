@@ -132,7 +132,8 @@ runs:
       run: |
         args=()
         for input in name workspace software container vm-type gpu region disk-size keepalive file env subdomain allow-ssh-from port interactive detach sync root forward-gcp-adc tag sync-ignore mount-bucket; do
-          var_name=echo "INPUT_${input^^}" | tr '-' '_' # Convert input to uppercase and prefix with INPUT_
+          var_name="INPUT_${input^^}"  # Convert input to uppercase
+          var_name=$(echo "$var_name" | tr '-' '_')  # Replace '-' with '_'
           value="${!var_name}"  # Use variable indirection to get the value
           if [[ -n "$value" ]]; then
             args+=("--$input" "$value")
