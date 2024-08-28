@@ -83,8 +83,10 @@ runs:
   steps:
     - name: Check if command is set
       shell: bash
+      env:
+        INPUT_COMMAND: ${{ inputs.command }}
       run: |
-        if [[ -z $INPUT_COMMAND ]]; then
+        if [[ -z "$INPUT_COMMAND" ]]; then
           echo "Command is required."
           exit 1
         fi
@@ -102,13 +104,38 @@ runs:
 
     - name: Run coiled run
       shell: bash
+      env:
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_NAME: ${{ inputs.name }}
+        INPUT_WORKSPACE: ${{ inputs.workspace }}
+        INPUT_SOFTWARE: ${{ inputs.software }}
+        INPUT_CONTAINER: ${{ inputs.container }}
+        INPUT_VM_TYPE: ${{ inputs.vm-type }}
+        INPUT_GPU: ${{ inputs.gpu }}
+        INPUT_REGION: ${{ inputs.region }}
+        INPUT_DISK-SIZE: ${{ inputs.disk-size }}
+        INPUT_KEEPALIVE: ${{ inputs.keepalive }}
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_ENV: ${{ inputs.env }}
+        INPUT_SUBDOMAIN: ${{ inputs.subdomain }}
+        INPUT_ALLOW_SSH_FROM: ${{ inputs.allow-ssh-from }}
+        INPUT_PORT: ${{ inputs.port }}
+        INPUT_INTERACTIVE: ${{ inputs.interactive }}
+        INPUT_DETACH: ${{ inputs.detach }}
+        INPUT_SYNC: ${{ inputs.sync }}
+        INPUT_ROOT: ${{ inputs.root }}
+        INPUT_FORWARD_GCP_ADC: ${{ inputs.forward-gcp-adc }}
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_SYNC_IGNORE: ${{ inputs.sync-ignore }}
+        INPUT_MOUNT_BUCKET: ${{ inputs.mount-bucket }}
+
       run: |
         args=()
         for input in name workspace software container vm-type gpu region disk-size keepalive file env subdomain allow-ssh-from port interactive detach sync root forward-gcp-adc tag sync-ignore mount-bucket; do
-          var_name="INPUT_${input^^}"  # Convert input to uppercase and prefix with INPUT_
+          var_name=echo "INPUT_${input^^}" | tr '-' '_' # Convert input to uppercase and prefix with INPUT_
           value="${!var_name}"  # Use variable indirection to get the value
           if [[ -n "$value" ]]; then
             args+=("--$input" "$value")
           fi
         done
-        micromamba run -n coiled-run coiled run "${{ inputs.command }}" "${args[@]}"
+        micromamba run -n coiled-run coiled run "${INPUT_COMMAND}" "${args[@]}"
