@@ -1,0 +1,111 @@
+name: 'Coiled Login'
+description: 'GitHub Action to run CLI jobs on VM via Coiled'
+author: 'Coiled'
+
+branding:
+  icon: 'command'
+  color: 'blue'
+
+inputs:
+  command:
+    description: "Command to run on VM."
+    required: true
+  name:
+    description: "Run name. This identifier controls whether `coiled run` invocations are dispatched to the same cloud VM or not. Use the same name to run multiple commands on the same VM. Defaults to a unique name with no VM reuse."
+    required: false
+  workspace:
+    description: "Coiled workspace (uses default workspace if not specified)."
+    required: false
+  software:
+    description: "Software environment name to use. If neither software nor container is specified, all the currently-installed Python packages are replicated on the VM using package sync."
+    required: false
+  container:
+    description: "Container image to use. If neither software nor container is specified, all the currently-installed Python packages are replicated on the VM using package sync."
+    required: false
+  vm-type:
+    description: "VM type to use. Specify multiple times to provide multiple options."
+    required: false
+  gpu:
+    description: "Have a GPU available."
+    required: false
+  region:
+    description: "The cloud provider region in which to run the notebook."
+    required: false
+  disk-size:
+    description: "Use larger-than-default disk on VM, specified in GiB."
+    required: false
+  keepalive:
+    description: "Keep your VM running for the specified time, even after your command completes. In seconds (``--keepalive 60``) unless you specify units (``--keepalive 3m`` for 3 minutes).Default to shutdown immediately after the command finishes."
+    required: false
+  file:
+    description: "Local files required to run command. Can be either individual file or entire directory. Multiple values can be specified, such as ``--file foo.txt --file my-subdir/``."
+    required: false
+  env:
+    description: "Environment variables securely transmitted to run command environment. Format is ``KEY=val``, multiple vars can be set with separate ``--env`` for each."
+    required: false
+  subdomain:
+    description: "Custom subdomain for the VM hostname."
+    required: false
+  allow-ssh-from:
+    description: "IP address or CIDR from which connections to port 22 (SSH) are open; can also be specified as 'everyone' (0.0.0.0/0) or 'me' (automatically determines public IP detected for your local client). Note that ``coiled run`` relies on SSH connection for executing commands on VM.  [default: me]"
+    required: false
+  port:
+    description: "Open extra ports in network firewall for inbound connections (multiple ports can be set with separate ``--port`` for each)."
+    required: false
+  interactive:
+    description: "Open an interactive session, e.g., ``coiled run --interactive bash`` or ``coiled run --interactive python``."
+    required: false
+  detach:
+    description: "Start the run in the background, don't wait for the results."
+    required: false
+  sync:
+    description: "Sync files between local working directory and ``/scratch/synced``."
+    required: false
+  root:
+    description: "Act as root in Docker container."
+    required: false
+  forward-gcp-adc:
+    description: "Forward long-lived Google Cloud Application Default Credentials to VM for data access."
+    required: false
+  tag:
+    description: "Tags. Format is ``KEY=val``, multiple vars can be set with separate ``--tag`` for each."
+    required: false
+  sync-ignore:
+    description: "Paths to not sync when using ``--sync``."
+    required: false
+  mount-bucket:
+    description: "S3 or GCS bucket(s) to mount as volumes."
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check if token is set
+      shell: bash
+      run: |
+        if [[ -z "${{ inputs.token }}" ]]; then
+          echo "Token is required."
+          exit 1
+        fi
+    - uses: actions/checkout@v4
+    - name: Install conda environment
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads-key: coiled-run-downloads-${{ runner.arch }}
+        cache-environment-key: coiled-run-env-${{ runner.arch }}
+        generate-run-shell: false
+        environment-name: coiled-run
+        create-args: >-
+          python=3.12
+          coiled=1.45.0
+
+    - name: Run coiled run
+      shell: bash
+      run: |
+        args=()
+        for input in name workspace software container vm-type gpu region disk-size keepalive file env subdomain allow-ssh-from port interactive detach sync root forward-gcp-adc tag sync-ignore mount-bucket; do
+          if [[ -n "${{ inputs.$input }}" ]]; then
+            args+=("--$input" "${{ inputs.$input }}")
+          fi
+        done
+        micromamba run -n coiled-run coiled run "${{ inputs.command }}" "${args[@]}"

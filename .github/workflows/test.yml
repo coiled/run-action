@@ -1,0 +1,27 @@
+name: coiled-login-action
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Coiled Login
+        uses: coiled/login-action@v1
+        with:
+          token: ${{ secrets.PROD_TEST_BOT_TOKEN }}
+
+      - name: Coiled Run
+        uses: ./
+        with:
+          command: echo "Hello, world!"
