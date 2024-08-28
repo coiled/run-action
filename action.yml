@@ -84,7 +84,7 @@ runs:
     - name: Check if command is set
       shell: bash
       run: |
-        if [[ -z "${{ inputs.command }}" ]]; then
+        if [[ -z $INPUT_COMMAND ]]; then
           echo "Command is required."
           exit 1
         fi
