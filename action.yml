@@ -93,14 +93,17 @@ runs:
     - uses: actions/checkout@v4
     - name: Install conda environment
       uses: mamba-org/setup-micromamba@v1
+      env:
+        PYTHON_VERSION: 3.12
+        COILED_VERSION: 1.45.0
       with:
-        cache-downloads-key: coiled-run-downloads-${{ runner.arch }}
-        cache-environment-key: coiled-run-env-${{ runner.arch }}
+        cache-downloads-key: coiled-run-downloads-${{ runner.arch }}-${{ envs.PYTHON_VERSION }}-${{ envs.COILED_VERSION }}
+        cache-environment-key: coiled-run-env-${{ runner.arch }}-${{ envs.PYTHON_VERSION }}-${{ envs.COILED_VERSION }}
         generate-run-shell: false
         environment-name: coiled-run
         create-args: >-
-          python=3.12
-          coiled=1.45.0
+          python=${{ envs.PYTHON_VERSION }}
+          coiled=${{ envs.COILED_VERSION }}
 
     - name: Run coiled run
       shell: bash

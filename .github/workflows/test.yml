@@ -20,6 +20,7 @@ jobs:
         uses: coiled/login-action@v1
         with:
           token: ${{ secrets.PROD_TEST_BOT_TOKEN }}
+          workspace: aws-vm-self-hosted-nuked-testbot-account
 
       - name: Coiled Run
         uses: ./
