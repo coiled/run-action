@@ -1,4 +1,4 @@
-cod# Coiled Run GitHub Action
+# Coiled Run GitHub Action
 
 This GitHub Action runs a command on a [Coiled](https://coiled.io) cluster by adding the following steps to your workflow. For more details see our [CLI job docs](https://docs.coiled.io/user_guide/cli-jobs.html).
 
