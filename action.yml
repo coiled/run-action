@@ -23,7 +23,7 @@ inputs:
     description: "Container image to use. If neither software nor container is specified, all the currently-installed Python packages are replicated on the VM using package sync."
     required: false
   vm-type:
-    description: "VM type to use. Specify multiple times to provide multiple options."
+    description: "VM type to use. Specify multiple types separated by spaces to provide multiple options."
     required: false
   gpu:
     description: "Have a GPU available."
@@ -35,13 +35,13 @@ inputs:
     description: "Use larger-than-default disk on VM, specified in GiB."
     required: false
   keepalive:
-    description: "Keep your VM running for the specified time, even after your command completes. In seconds (``--keepalive 60``) unless you specify units (``--keepalive 3m`` for 3 minutes).Default to shutdown immediately after the command finishes."
+    description: "Keep your VM running for the specified time, even after your command completes. In seconds (``60``) unless you specify units (``3m`` for 3 minutes). Default to shutdown immediately after the command finishes."
     required: false
   file:
-    description: "Local files required to run command. Can be either individual file or entire directory. Multiple values can be specified, such as ``--file foo.txt --file my-subdir/``."
+    description: "Local files required to run command. Can be either individual file or entire directory. Multiple values can be specified, by separating with spaces (``foo.txt my-subdir/``)."
     required: false
   env:
-    description: "Environment variables securely transmitted to run command environment. Format is ``KEY=val``, multiple vars can be set with separate ``--env`` for each."
+    description: "Environment variables securely transmitted to run command environment. Format is ``KEY=val``, multiple vars can be specified by separating with spaces."
     required: false
   subdomain:
     description: "Custom subdomain for the VM hostname."
@@ -50,7 +50,7 @@ inputs:
     description: "IP address or CIDR from which connections to port 22 (SSH) are open; can also be specified as 'everyone' (0.0.0.0/0) or 'me' (automatically determines public IP detected for your local client). Note that ``coiled run`` relies on SSH connection for executing commands on VM.  [default: me]"
     required: false
   port:
-    description: "Open extra ports in network firewall for inbound connections (multiple ports can be set with separate ``--port`` for each)."
+    description: "Open extra ports in network firewall for inbound connections (multiple ports can be set by separating them with spaces)."
     required: false
   interactive:
     description: "Open an interactive session, e.g., ``coiled run --interactive bash`` or ``coiled run --interactive python``."
@@ -68,10 +68,10 @@ inputs:
     description: "Forward long-lived Google Cloud Application Default Credentials to VM for data access."
     required: false
   tag:
-    description: "Tags. Format is ``KEY=val``, multiple vars can be set with separate ``--tag`` for each."
+    description: "Tags. Format is ``KEY=val``, multiple vars can be set by separating with spaces."
     required: false
   sync-ignore:
-    description: "Paths to not sync when using ``--sync``."
+    description: "Paths to not sync when using ``sync``."
     required: false
   mount-bucket:
     description: "S3 or GCS bucket(s) to mount as volumes."
@@ -139,7 +139,14 @@ runs:
           var_name=$(echo "$var_name" | tr '-' '_')  # Replace '-' with '_'
           value="${!var_name}"  # Use variable indirection to get the value
           if [[ -n "$value" ]]; then
-            args+=("--$input" "$value")
+            # Handle multiple values for certain inputs
+            if [[ "$input" == "name" ]] || [[ "$input" == "vm-type" ]] || [[ "$input" == "env" ]] || [[ "$input" == "port" ]] || [[ "$input" == "tag" ]]; then
+              for val in $value; do
+                args+=("--$input" "$val")
+              done
+            else
+              args+=("--$input" "$value")
+            fi
           fi
         done
         micromamba run -n coiled-run coiled run "${INPUT_COMMAND}" "${args[@]}"
