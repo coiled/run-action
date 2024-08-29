@@ -1,4 +1,4 @@
-name: coiled-login-action
+name: coiled-run-test
 
 on:
   workflow_dispatch:
