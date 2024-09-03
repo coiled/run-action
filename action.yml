@@ -1,4 +1,4 @@
-name: 'Coiled Login'
+name: 'Coiled Run'
 description: 'GitHub Action to run CLI jobs on VM via Coiled'
 author: 'Coiled'
 
